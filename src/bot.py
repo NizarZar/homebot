@@ -29,7 +29,6 @@ MQTT_PASSWORD = config["MQTT_PASSWORD"]
 intents = discord.Intents.default()
 intents.message_content = True
 discord_client = discord.Client(intents=intents)
-target_channel = None
 
 @discord_client.event
 async def on_ready():
@@ -37,6 +36,7 @@ async def on_ready():
     print(f'Logged in as {discord_client.user}')
     target_channel = discord_client.get_channel(DISCORD_CHANNEL_ID)
 
+@discord_client.event
 async def send_message_to_discord(content):
     if target_channel:
         await target_channel.send(content)
