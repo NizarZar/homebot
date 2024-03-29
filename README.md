@@ -13,4 +13,4 @@
     "MQTT_TOPIC": "YOUR_TOPIC",
     "MQTT_USERNAME": "USERNAME",
     "MQTT_PASSWORD": "PASSWORD"
-  }```
+  }
