@@ -8,7 +8,7 @@ import os
 import paho.mqtt.client as paho
 from paho import mqtt
 
-
+# find the directory of config.json
 current_config_dir = os.path.dirname(os.path.abspath(__file__))
 n_config_path = os.path.join(current_config_dir, '..', 'config.json')
 
@@ -17,6 +17,7 @@ config_path = os.path.normpath(n_config_path)
 with open(config_path, 'r') as config_file:
     config = json.load(config_file)
 
+# extract from config.json necessary information
 DISCORD_TOKEN = config["DISCORD_TOKEN"]
 DISCORD_CHANNEL_ID = int(config["DISCORD_CHANNEL_ID"])
 MQTT_BROKER = config["MQTT_BROKER"]
@@ -25,32 +26,37 @@ MQTT_TOPIC = config["MQTT_TOPIC"]
 MQTT_USERNAME = config["MQTT_USERNAME"]
 MQTT_PASSWORD = config["MQTT_PASSWORD"]
 
-
+# create discord client
 intents = discord.Intents.default()
 intents.message_content = True
 discord_client = discord.Client(intents=intents)
 
+# when discord client connects
 @discord_client.event
 async def on_ready():
     global target_channel
     print(f'Logged in as {discord_client.user}')
     target_channel = discord_client.get_channel(DISCORD_CHANNEL_ID)
 
+# send message to the channel event
 @discord_client.event
 async def send_message_to_discord(content):
     if target_channel:
         await target_channel.send(content)
 
+# mqtt connection
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code " + str(rc))
     client.subscribe(MQTT_TOPIC)
 
+# check if mqtt sent a message
 def on_message(client, userdata, msg):
     message = f"**{msg.topic}:** {msg.payload.decode()}"
     print(message)
     if discord_client.is_ready():
         asyncio.run_coroutine_threadsafe(send_message_to_discord(message), discord_client.loop)
 
+# logs for mqtt (debug)
 def on_log(client, userdata, level, buf):
     print("Log: ", buf)
 
