@@ -4,6 +4,7 @@
 
 ## JSON
 - To connect your MQTT with your discord bot you have to create **config.json** file in the main folder (not src)
+- You can add as many topics as you want in the JSON, but you will need to change the code in **bot.py** to make it work.
   ```
   {
     "DISCORD_TOKEN": "BOT_TOKEN",
