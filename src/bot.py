@@ -22,7 +22,8 @@ DISCORD_TOKEN = config["DISCORD_TOKEN"]
 DISCORD_CHANNEL_ID = int(config["DISCORD_CHANNEL_ID"])
 MQTT_BROKER = config["MQTT_BROKER"]
 MQTT_PORT = int(config["MQTT_PORT"])
-MQTT_TOPIC = config["MQTT_TOPIC"]
+MQTT_TOPIC_ALARM = config["MQTT_TOPIC_ALARM"]
+MQTT_TOPIC_TEMPERATURE_ROOM1 = config["MQTT_TOPIC_TEMPERATURE_ROOM1"]
 MQTT_USERNAME = config["MQTT_USERNAME"]
 MQTT_PASSWORD = config["MQTT_PASSWORD"]
 
@@ -30,6 +31,13 @@ MQTT_PASSWORD = config["MQTT_PASSWORD"]
 intents = discord.Intents.default()
 intents.message_content = True
 discord_client = discord.Client(intents=intents)
+
+async def send_message(message, user_message, is_private):
+    try:
+        response = user_message
+        await message.author.send(response) if is_private else await message.channel.send(response)
+    except Exception as e:
+        print(e)
 
 # when discord client connects
 @discord_client.event
@@ -47,7 +55,8 @@ async def send_message_to_discord(content):
 # mqtt connection
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code " + str(rc))
-    client.subscribe(MQTT_TOPIC)
+    client.subscribe(MQTT_TOPIC_ALARM)
+    client.subscribe(MQTT_TOPIC_TEMPERATURE_ROOM1)
 
 # check if mqtt sent a message
 def on_message(client, userdata, msg):
