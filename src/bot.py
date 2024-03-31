@@ -55,6 +55,7 @@ async def send_message_to_discord(content):
     if target_channel:
         await target_channel.send(content)
 
+# discord commands
 @discord_client.event
 async def on_message(message):
     if message.author == discord_client.user:
@@ -84,8 +85,6 @@ def on_publish(client, userdata, mid, properties=None):
 # logs for mqtt (debug)
 def on_log(client, userdata, level, buf):
     print("Log: ", buf)
-
-
         
 
 def start_mqtt_client():
