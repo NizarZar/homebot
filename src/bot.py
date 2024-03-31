@@ -8,6 +8,8 @@ import os
 import paho.mqtt.client as paho
 from paho import mqtt
 
+client = paho.Client()
+
 # find the directory of config.json
 current_config_dir = os.path.dirname(os.path.abspath(__file__))
 n_config_path = os.path.join(current_config_dir, '..', 'config.json')
@@ -24,6 +26,7 @@ MQTT_BROKER = config["MQTT_BROKER"]
 MQTT_PORT = int(config["MQTT_PORT"])
 MQTT_TOPIC_ALARM = config["MQTT_TOPIC_ALARM"]
 MQTT_TOPIC_TEMPERATURE_ROOM1 = config["MQTT_TOPIC_TEMPERATURE_ROOM1"]
+MQTT_TOPIC_REQUEST = config["MQTT_TOPIC_REQUEST"]
 MQTT_USERNAME = config["MQTT_USERNAME"]
 MQTT_PASSWORD = config["MQTT_PASSWORD"]
 
@@ -52,6 +55,17 @@ async def send_message_to_discord(content):
     if target_channel:
         await target_channel.send(content)
 
+@discord_client.event
+async def on_message(message):
+    if message.author == discord_client.user:
+        return
+    username = str(message.author)
+    user_message = str(message.content)
+
+    if user_message == '!temp':
+        client.publish(MQTT_TOPIC_REQUEST, "TempRequest")
+        print("Request sent to MQTT for temperature")
+
 # mqtt connection
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code " + str(rc))
@@ -59,24 +73,28 @@ def on_connect(client, userdata, flags, rc):
     client.subscribe(MQTT_TOPIC_TEMPERATURE_ROOM1)
 
 # check if mqtt sent a message
-def on_message(client, userdata, msg):
+def on_message_mqtt(client, userdata, msg):
     message = f"**{msg.topic}:** {msg.payload.decode()}"
     print(message)
     if discord_client.is_ready():
         asyncio.run_coroutine_threadsafe(send_message_to_discord(message), discord_client.loop)
+def on_publish(client, userdata, mid, properties=None):
+    print("published: " + str(mid))
 
 # logs for mqtt (debug)
 def on_log(client, userdata, level, buf):
     print("Log: ", buf)
 
 
+        
+
 def start_mqtt_client():
-    client = paho.Client()
     client.tls_set(tls_version=mqtt.client.ssl.PROTOCOL_TLS)
     client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
     client.on_log = on_log
     client.on_connect = on_connect
-    client.on_message = on_message
+    client.on_message = on_message_mqtt
+    client.on_publish = on_publish
     client.connect(MQTT_BROKER, MQTT_PORT)
     client.loop_forever()
 
